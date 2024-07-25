@@ -1,44 +1,53 @@
 import numpy as np
 
-def activation(x):
-    return 1 if x >= 0 else 0
+def step_function(x):
+    return np.where(x >= 0, 1, 0)
 
 
-X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-y_and = np.array([0, 0, 0, 1])
-y_or = np.array([0, 1, 1, 1])  
+X_and = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y_and = np.array([[0], [0], [0], [1]])
+X_or = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y_or = np.array([[0], [1], [1], [1]])
 
-w_and = np.array([0.5, 0.5])
-b_and = -0.7
-w_or = np.array([0.5, 0.5])
-b_or = -0.3
+class Perceptron:
+    def __init__(self, input_size, learning_rate=0.1, epochs=1000):
+        self.weights = np.zeros((input_size, 1))
+        self.bias = 0
+        self.learning_rate = learning_rate
+        self.epochs = epochs
 
-lr = 0.1
+    def train(self, X, y):
+        for _ in range(self.epochs):
+            for inputs, label in zip(X, y):
+                inputs = inputs.reshape(-1, 1)
+                linear_output = np.dot(inputs.T, self.weights) + self.bias
+                prediction = step_function(linear_output)
+                error = label - prediction
+                self.weights += self.learning_rate * error * inputs
+                self.bias += self.learning_rate * error
 
-epochs = 10000
-for epoch in range(epochs):
-    for x, y_and_true, y_or_true in zip(X, y_and, y_or):
-        z_and = np.dot(x, w_and) + b_and
-        y_and_pred = activation(z_and)
-        z_or = np.dot(x, w_or) + b_or
-        y_or_pred = activation(z_or)
+    def predict(self, X):
+        linear_output = np.dot(X, self.weights) + self.bias
+        return step_function(linear_output)
 
-        error_and = y_and_true - y_and_pred
-        error_or = y_or_true - y_or_pred
+perceptron_and = Perceptron(input_size=2)
+perceptron_and.train(X_and, y_and)
 
-        w_and += lr * error_and * x
-        b_and += lr * error_and
-        w_or += lr * error_or * x
-        b_or += lr * error_or
+perceptron_or = Perceptron(input_size=2)
+perceptron_or.train(X_or, y_or)
 
-print("AND function:")
-for x in X:
-    z_and = np.dot(x, w_and) + b_and
-    y_and_pred = activation(z_and)
-    print(f"Input: {x}, Output: {y_and_pred}")
+print("AND Function Predictions:")
+print(perceptron_and.predict(X_and))
 
-print("\nOR function:")
-for x in X:
-    z_or = np.dot(x, w_or) + b_or
-    y_or_pred = activation(z_or)
-    print(f"Input: {x}, Output: {y_or_pred}")
+print("\nOR Function Predictions:")
+print(perceptron_or.predict(X_or))
+
+# Manually test specific input 
+and_test_input = np.array([[1, 1]])
+print("\nAND Function Prediction for input [1, 1]:")
+print(perceptron_and.predict(and_test_input))
+
+# Manually test specific input 
+or_test_input = np.array([[0, 1]])
+print("\nOR Function Prediction for input [0, 1]:")
+print(perceptron_or.predict(or_test_input))
